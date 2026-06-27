@@ -1,0 +1,12 @@
+# Python environment & cache
+__pycache__/
+*.pyc
+.venv/
+ai-core/.venv/
+.pytest_cache/
+ai-core/.pytest_cache/
+.vscode/
+
+# Environment variables (Bảo mật - Tuyệt đối không push)
+.env
+ai-core/.env
