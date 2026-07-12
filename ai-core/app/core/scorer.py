@@ -198,9 +198,11 @@ def calculate_python_score(detected_signals: List[str]) -> Tuple[int, dict[str, 
     total_score = a_score + b_score + c_score
 
     scoring_details = {
-        # Dùng final_a (sau khi áp dụng override rule), không phải a_signals (gốc từ LLM).
-        # Đảm bảo signals_detected khớp chính xác với những signal thực sự contribute vào a_score.
-        "group_a": SignalDetail(signals_detected=final_a, score=a_score, reason=a_reason),
+        # Dùng a_signals (toàn bộ signal LLM detect được), KHÔNG phải final_a (đã bị override).
+        # Design có chủ ý: score tính từ final_a, nhưng signals_detected giữ nguyên a_signals
+        # để BA đọc audit log thấy đầy đủ, ví dụ: "LLM detect [A1, A3], A3 override A1,
+        # nên chỉ tính A3=30". Đây là transparency, không phải bug — không sửa lại nữa.
+        "group_a": SignalDetail(signals_detected=a_signals, score=a_score, reason=a_reason),
         "group_b": SignalDetail(signals_detected=b_signals, score=b_score, reason=b_reason),
         "group_c": SignalDetail(signals_detected=c_signals, score=c_score, reason=c_reason),
     }

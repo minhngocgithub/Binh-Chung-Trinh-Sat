@@ -8,7 +8,9 @@ class Settings(BaseSettings):
     google_api_key: str = ""        # https://aistudio.google.com → free tier
     deepseek_api_key: str = ""      # https://platform.deepseek.com → có free credits
     openrouter_api_key: str = ""    # Backup
-
+    
+    api_key: str = ""
+    allowed_ips: str = "" 
     default_model: str = "llama-3.3-70b-versatile"
     default_provider: str = "groq"
 

@@ -10,3 +10,4 @@ ai-core/.pytest_cache/
 # Environment variables (Bảo mật - Tuyệt đối không push)
 .env
 ai-core/.env
+node_modules/
