@@ -1,17 +1,94 @@
 services:
+  # ─── n8n — orchestrator, PUBLIC port 5678 ───────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      # KHÔNG set N8N_ENCRYPTION_KEY ở đây — n8n-data/config đã có sẵn
+      # encryptionKey (copy từ máy cũ qua SCP), set đè có thể làm n8n
+      # không đọc được credentials cũ đã lưu trong database.sqlite.
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    depends_on:
+      - redis-2
+      - ai-core
+      - weaver-api
+    networks:
+      - bcts-network
+
+  # ─── redis — cache riêng cho weaver-api ─────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - bcts-network
+
+  # ─── redis-2 — dùng bởi n8n (queue/cache riêng) ─────────────────────
+  redis-2:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis2-data:/data
+    networks:
+      - bcts-network
+
+  # ─── weaver-api — enrich (chỉ crawl httpx+BeautifulSoup, đã bỏ LLM
+  #     fallback vì 9router bị loại khỏi kiến trúc), KHÔNG public port ─
+  weaver-api:
+    build:
+      context: ./weaver-api
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=redis://redis:6379
+      # TODO: bổ sung các biến khác weaver-api cần (xem weaver-api/.env)
+      # NINE_ROUTER_URL / NINE_ROUTER_API_KEY / NINE_ROUTER_MODEL đã bỏ
+    env_file:
+      - ./weaver-api/.env
+    depends_on:
+      - redis
+    networks:
+      - bcts-network
+
+  # ─── discord-bot — Node.js, KHÔNG public port ───────────────────────
+  discord-bot:
+    build:
+      context: ./discord-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      # PHẢI tên là N8N_WEBHOOK (khớp bot.js: process.env.N8N_WEBHOOK),
+      # là URL ĐẦY ĐỦ kèm path /webhook/discord — khác với WEBHOOK_URL
+      # của service n8n ở trên (n8n dùng biến đó cho mục đích khác).
+      - N8N_WEBHOOK=${N8N_WEBHOOK}
+    depends_on:
+      - n8n
+    networks:
+      - bcts-network
+
+  # ─── ai-core — FastAPI/Pydantic AI (Scorer + Writer), KHÔNG public port
   ai-core:
     build:
       context: ./ai-core
-      dockerfile: Dockerfile
-    container_name: sportaiv-ai-core
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
     env_file:
       - ./ai-core/.env
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    depends_on:
+      - redis
+    networks:
+      - bcts-network
+
+networks:
+  bcts-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  redis2-data:
