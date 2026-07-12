@@ -42,16 +42,14 @@ services:
 
   # ─── weaver-api — enrich (chỉ crawl httpx+BeautifulSoup, đã bỏ LLM
   #     fallback vì 9router bị loại khỏi kiến trúc), KHÔNG public port ─
+  #     Không cần env_file: services.py có guard "if not NINE_ROUTER_
+  #     API_KEY" nên tự skip nhánh gọi 9router khi thiếu key (an toàn).
   weaver-api:
     build:
       context: ./weaver-api
     restart: unless-stopped
     environment:
       - REDIS_URL=redis://redis:6379
-      # TODO: bổ sung các biến khác weaver-api cần (xem weaver-api/.env)
-      # NINE_ROUTER_URL / NINE_ROUTER_API_KEY / NINE_ROUTER_MODEL đã bỏ
-    env_file:
-      - ./weaver-api/.env
     depends_on:
       - redis
     networks:
