@@ -11,3 +11,4 @@ ai-core/.pytest_cache/
 .env
 ai-core/.env
 node_modules/
+n8n-data/
