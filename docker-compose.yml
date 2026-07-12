@@ -10,6 +10,10 @@ services:
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
       - WEBHOOK_URL=${WEBHOOK_URL}
+      # Bắt buộc vì kiến trúc không dùng nginx/HTTPS (quyết định của
+      # manager) — n8n mặc định yêu cầu secure cookie (chỉ hoạt động
+      # qua https), nếu không tắt sẽ không đăng nhập được qua http.
+      - N8N_SECURE_COOKIE=false
       # KHÔNG set N8N_ENCRYPTION_KEY ở đây — n8n-data/config đã có sẵn
       # encryptionKey (copy từ máy cũ qua SCP), set đè có thể làm n8n
       # không đọc được credentials cũ đã lưu trong database.sqlite.
