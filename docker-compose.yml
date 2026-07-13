@@ -1,5 +1,20 @@
 services:
-  # ─── n8n — orchestrator, PUBLIC port 5678 ───────────────────────────
+  # ─── nginx — reverse proxy, GIAI ĐOẠN 1: chỉ HTTP (port 80) để xin
+  #     SSL cert. Sau khi có cert sẽ nâng cấp config sang HTTPS (443). ──
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certbot-webroot:/var/www/certbot
+    depends_on:
+      - n8n
+    networks:
+      - bcts-network
+
+  # ─── n8n — orchestrator ──────────────────────────────────────────────
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
