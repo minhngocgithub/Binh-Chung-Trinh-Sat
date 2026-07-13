@@ -27,10 +27,9 @@ services:
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
       - WEBHOOK_URL=${WEBHOOK_URL}
-      # Bắt buộc vì kiến trúc không dùng nginx/HTTPS (quyết định của
-      # manager) — n8n mặc định yêu cầu secure cookie (chỉ hoạt động
-      # qua https), nếu không tắt sẽ không đăng nhập được qua http.
-      - N8N_SECURE_COOKIE=false
+      # Giờ đã có HTTPS thật qua nginx (Let's Encrypt) nên bật lại
+      # secure cookie theo đúng khuyến nghị bảo mật của n8n.
+      - N8N_SECURE_COOKIE=true
       # KHÔNG set N8N_ENCRYPTION_KEY ở đây — n8n-data/config đã có sẵn
       # encryptionKey (copy từ máy cũ qua SCP), set đè có thể làm n8n
       # không đọc được credentials cũ đã lưu trong database.sqlite.
@@ -83,10 +82,11 @@ services:
     restart: unless-stopped
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
-      # PHẢI tên là N8N_WEBHOOK (khớp bot.js: process.env.N8N_WEBHOOK),
-      # là URL ĐẦY ĐỦ kèm path /webhook/discord — khác với WEBHOOK_URL
-      # của service n8n ở trên (n8n dùng biến đó cho mục đích khác).
-      - N8N_WEBHOOK=${N8N_WEBHOOK}
+      # PHẢI tên là N8N_WEBHOOK (khớp bot.js: process.env.N8N_WEBHOOK).
+      # Dùng hostname nội bộ "n8n" (tên service trong bcts-network) thay
+      # vì IP public — nhanh hơn (không vòng qua internet) và vẫn chạy
+      # được kể cả sau khi đóng port 5678 public.
+      - N8N_WEBHOOK=http://n8n:5678/webhook/discord-ingest
     depends_on:
       - n8n
     networks:
