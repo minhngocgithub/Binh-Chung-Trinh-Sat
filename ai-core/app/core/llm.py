@@ -71,22 +71,20 @@ def _make_openrouter(model_name: str) -> ModelEntry:
 def get_model_chain() -> list[ModelEntry]:
     chain: list[ModelEntry] = []
 
-    # Primary — Groq: 30 req/min, 14,400 req/day, ~1-2s response
     if settings.groq_api_key:
-        chain.append(_make_groq("llama-3.3-70b-versatile"))
-        chain.append(_make_groq("gemma2-9b-it"))
+        chain.append(_make_groq("openai/gpt-oss-120b"))
+        chain.append(_make_groq("openai/gpt-oss-20b"))
 
-    # Fallback 1 — Google AI Studio: quota riêng
     if settings.google_api_key:
-        chain.append(_make_google("gemini-2.0-flash"))
+        chain.append(_make_google("gemini-2.5-flash"))
+        chain.append(_make_google("gemini-2.5-flash-lite"))
 
-    # Fallback 2 — DeepSeek: free credits
     if settings.deepseek_api_key:
         chain.append(_make_deepseek("deepseek-chat"))
 
-    # Backup cuối — OpenRouter
     if settings.openrouter_api_key:
-        chain.append(_make_openrouter("meta-llama/llama-3.3-70b-instruct:free"))
+        chain.append(_make_openrouter("openai/gpt-oss-120b:free"))
+        chain.append(_make_openrouter("google/gemma-4-31b-it:free"))
 
     return chain
 
