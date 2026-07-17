@@ -42,16 +42,16 @@ def _make_google(model_name: str) -> ModelEntry:
     )
 
 
-def _make_deepseek(model_name: str) -> ModelEntry:
+def _make_mistral(model_name: str) -> ModelEntry:
     return ModelEntry(
         model=OpenAIChatModel(
             model_name,
             provider=OpenAIProvider(
-                api_key=settings.deepseek_api_key,
-                base_url="https://api.deepseek.com/v1",
+                api_key=settings.mistral_api_key,
+                base_url="https://api.mistral.ai/v1",
             ),
         ),
-        provider_name="deepseek",
+        provider_name="mistral",
     )
 
 
@@ -79,8 +79,8 @@ def get_model_chain() -> list[ModelEntry]:
         chain.append(_make_google("gemini-2.5-flash"))
         chain.append(_make_google("gemini-2.5-flash-lite"))
 
-    if settings.deepseek_api_key:
-        chain.append(_make_deepseek("deepseek-chat"))
+    if settings.mistral_api_key:
+        chain.append(_make_mistral("mistral-large"))
 
     if settings.openrouter_api_key:
         chain.append(_make_openrouter("openai/gpt-oss-120b:free"))
