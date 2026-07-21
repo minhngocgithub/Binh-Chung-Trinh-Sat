@@ -9,11 +9,24 @@ from app.config import settings
 class ModelEntry:
     """Wrapper giữ model + tên provider thật để fallback.py dùng."""
     model: OpenAIChatModel
-    provider_name: str  # "groq" | "google" | "deepseek" | "openrouter"
+    provider_name: str  # "agentgw" | "agentgw-gpt" | "groq" | "google" | "mistral" | "openrouter"
 
     @property
     def model_name(self) -> str:
         return getattr(self.model, "model_name", "unknown")
+
+
+def _make_agentgw(model_name: str, family: str = "agentgw") -> ModelEntry:
+    return ModelEntry(
+        model=OpenAIChatModel(
+            model_name,
+            provider=OpenAIProvider(
+                api_key=settings.agentgw_api_key,
+                base_url="https://agentgw.cloud/v1",
+            ),
+        ),
+        provider_name=family,
+    )
 
 
 def _make_groq(model_name: str) -> ModelEntry:
@@ -71,6 +84,13 @@ def _make_openrouter(model_name: str) -> ModelEntry:
 def get_model_chain() -> list[ModelEntry]:
     chain: list[ModelEntry] = []
 
+    # Ưu tiên hàng đầu theo yêu cầu Manager — cổng agentgw.cloud (đa model)
+    if settings.agentgw_api_key:
+        chain.append(_make_agentgw("agentgw-sonnet-4-6", family="agentgw"))
+        chain.append(_make_agentgw("agentgw-opus-4-8", family="agentgw"))
+        chain.append(_make_agentgw("agentgw-gpt-5.5-high", family="agentgw-gpt"))
+
+    # Lưới an toàn phía sau — các provider đã verify ổn định
     if settings.groq_api_key:
         chain.append(_make_groq("openai/gpt-oss-120b"))
         chain.append(_make_groq("openai/gpt-oss-20b"))

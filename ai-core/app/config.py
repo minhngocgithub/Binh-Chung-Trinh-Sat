@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""        # https://aistudio.google.com → free tier
     deepseek_api_key: str = ""      # https://platform.deepseek.com → có free credits
     mistral_api_key: str = ""       # https://console.mistral.ai → free tier (La Plateforme)
+    agentgw_api_key: str = ""
     openrouter_api_key: str = ""    # Backup
     
     api_key: str = ""
